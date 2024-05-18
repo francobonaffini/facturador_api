@@ -2,19 +2,33 @@ import zeep
 from zeep import Client
 import xml.etree.ElementTree as ET
 import subprocess
-import xml.etree.ElementTree as ET
 from datetime import datetime, timedelta
-import time
 import os
 import ssl
+from zeep.transports import Transport
+from requests import Session
+from requests.adapters import HTTPAdapter
 
-context = ssl.create_default_context()
-context.set_ciphers("DEFAULT@SECLEVEL=1")
 
-base = r"C:\Users\Franco Bonaffini\Desktop\produccion_certificados"
+class CustomHttpAdapter(HTTPAdapter):
+    def init_poolmanager(self, *args, **kwargs):
+        context = ssl.create_default_context(ssl.Purpose.SERVER_AUTH)
+        context.set_ciphers("DEFAULT:!DH")
+        kwargs['ssl_context'] = context
+        return super(CustomHttpAdapter, self).init_poolmanager(*args, **kwargs)
 
-entorno = 'certificacion_produccion'
-#entorno = 'certificacion_desarrollo'
+# Crear una sesión personalizada
+session = Session()
+# Montar el adaptador HTTP personalizado en la sesión
+session.mount("https://", CustomHttpAdapter())
+
+# Crear el transporte personalizado para zeep utilizando la sesión
+transport = Transport(session=session)
+
+base = os.getcwd()
+
+#entorno = 'certificacion_produccion'
+entorno = 'certificacion_desarrollo'
 
 MiLoginTicketRequest1 = os.path.join(base,"MiLoginTicketRequest.xml")
 
@@ -27,20 +41,20 @@ clave_privada = os.path.join(base,entorno,"privada_facturacion.key")
 # Url del servicio WSN (se utiliza una vez obtenida la autorizacion)
 
 # PRODUCCION (WSN)
-url2 = "https://servicios1.afip.gov.ar/wsfev1/service.asmx?WSDL"
+# url2 = "https://servicios1.afip.gov.ar/wsfev1/service.asmx?WSDL"
 
 # DESARROLLO (WSN):
-# url2 = "https://wswhomo.afip.gov.ar/wsfev1/service.asmx?WSDL"
+url2 = "https://wswhomo.afip.gov.ar/wsfev1/service.asmx?WSDL"
 
 
 def facturador_lotes():
 
     # URL del servicio web (endpoint) 
     # PRODUCCION (WSAAS)
-    url = 'https://wsaa.afip.gov.ar/ws/services/LoginCms?WSDL'
+    # url = 'https://wsaa.afip.gov.ar/ws/services/LoginCms?WSDL'
 
     # DESARROLLO (WSAAS)
-    # url = 'https://wsaahomo.afip.gov.ar/ws/services/LoginCms?WSDL'
+    url = 'https://wsaahomo.afip.gov.ar/ws/services/LoginCms?WSDL'
 
     #Modificamos el archivo MiLoginTicketRequest.xml para introducirle la hora y fecha actual y sumarle 1 HR:
     tree = ET.parse(MiLoginTicketRequest1)
@@ -52,7 +66,8 @@ def facturador_lotes():
     current_time = datetime.now().strftime('%Y-%m-%dT%H:%M:%S')
 
     #Script que se ejecuta cuando la hora de expiracion es menor que la hora actual
-    if (True):
+    # Dentro de la condicional es: expiration_time_element.text < current_time 
+    if (expiration_time_element.text < current_time ):
 
         print("La hora de expiracion es menor que la hora actual ejecuta codigo de actualizacion de token")
         # Calcular la hora de expiración
@@ -166,7 +181,7 @@ def facturador_lotes():
 
     # # # # # # W S N # # # # # # 
 
-    client = Client(url2)
+    client = Client(url2, transport=transport)
     
     cuitRepresentada = 20375182905  # Reemplaza esto con el valor real del CUIT representado
 
@@ -186,8 +201,8 @@ def facturador_lotes():
 
     responses = client.service.FECompUltimoAutorizado (
         Auth = auth,
-        PtoVta = 1,
-        CbteTipo=1
+        PtoVta = 2,
+        CbteTipo="11"
         
     )
     print("Solicitud recibida")
