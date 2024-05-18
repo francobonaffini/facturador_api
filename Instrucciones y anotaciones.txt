@@ -1,0 +1,35 @@
+#######  WSAA  ########## (el que otorga el token y sign mediante el CMS)
+
+El ambiente de Produccion es igual, solamente que el "certificado.pem" te lo otorga la pagina de la afip desde otra seccion, en "gestion de certificados", ahi pedimos un certificado por un WSN en particular:
+
+Link para autorizacion WSAA : 'https://wsaa.afip.gov.ar/ws/services/LoginCms?WSDL'   (PRODUCCION)
+
+Tenemos que tener el Token y Sign 
+
+<< Antes para obtener esto, necesitamos crear el CMS que se obtiene con OPENSSL mediante el codigo:
+
+
+	openssl cms -sign -in MiLoginTicketRequest.xml -out MiLoginTicketRequest2.xml.cms -signer certificado.pem -inkey MiClavePrivada.key -	nodetach -outform PEM
+
+
+	>>>>  DENTRO DE MiLoginTicketRequest2.xml.cms <<<<< tenemos el CMS que meteremos en WSAA para obtener el Token y SIgn.
+
+
+
+>Recorda: Tener el archivo MiLoginTicketRequest.xml (Aca se pone la hora exacta en la que se ejecuta el script, y como fecha de expiracion hay que calcularla, pero por ahora lo he puesto a 1 hr o 2hr)
+
+
+<< para el Script de WSAA se coloca cms_content que es un string largo con un HASH, para obtener ese CMS
+
+
+
+
+
+
+#######  WSN  ########## (El que mediante Sign y Token obtiene la informacion que queremos)
+
+en la API SOAP los datos que se reciben van a ser la operacion getPersona, que recibe los 4 parametros: cuitRepresentada, idPersona , sing y token
+
+Link para WSN ws_const_inscrip : 'https://aws.afip.gov.ar/sr-padron/webservices/personaServiceA5?WSDL'  (PRODUCCION)
+
+

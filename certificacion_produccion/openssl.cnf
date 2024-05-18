@@ -1,0 +1,16 @@
+[ req ]
+default_bits       = 2048
+distinguished_name = req_distinguished_name
+prompt             = no
+
+[ req_distinguished_name ]
+C                  = AR
+ST                 = Mendoza
+L                  = Ciudad de Mendoza
+O                  = Sin Empresa
+OU                 = Sin Organizacion
+CN                 = Franco
+emailAddress       = codigofranco@hotmail.com
+serialNumber       = CUIT 20375182905
+
+[ req_attributes ]

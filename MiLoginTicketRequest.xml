@@ -1,0 +1,8 @@
+<loginTicketRequest>
+    <header>    
+        <uniqueId>080823</uniqueId>
+        <generationTime>2024-05-17T17:21:19</generationTime>
+        <expirationTime>2024-05-17T18:21:19</expirationTime>
+    </header>
+    <service>wsfe</service>
+</loginTicketRequest>
