@@ -199,25 +199,98 @@ def facturador_lotes():
         Cuit=cuitRepresentada
     )
 
-    responses = client.service.FECompUltimoAutorizado (
-        Auth = auth,
-        PtoVta = 2,
-        CbteTipo="11"
-        
+
+    # Datos de la factura. (podrían ser varios, acá solo hay que iterarlas)
+    facturas = [
+        {
+            "Concepto": 1,
+            "DocTipo": 80,
+            "DocNro": 20375182906,
+            "CbteDesde": 1,
+            "CbteHasta": 1,
+            "CbteFch": datetime.now().strftime("%Y%m%d"),
+            "ImpTotal": 121.0,
+            "ImpTotConc": 0.0,
+            "ImpNeto": 100.0,
+            "ImpOpEx": 0.0,
+            "ImpTrib": 0.0,
+            "ImpIVA": 21,
+            "FchServDesde": '',
+            "FchServHasta": '',
+            "FchVtoPago": '',
+            "MonId": 'PES',
+            "MonCotiz": 1.0,
+            "Iva": [
+                {
+                    "Id": 5,  # 21%
+                    "BaseImp": 100.0,
+                    "Importe": 21.0
+                }
+            ]
+        },
+        # Añade más facturas según sea necesario
+    ]
+
+    # Crear el objeto FeCabReq
+    FeCabReq = client.get_type('ns0:FECAECabRequest')
+    fe_cab_req = FeCabReq(
+        CantReg=len(facturas),
+        PtoVta=1,
+        CbteTipo=1
     )
-    print("Solicitud recibida")
-    # Imprimir la respuesta
 
-    datos_generales = responses
+    # Crear los objetos FECAEDetRequest
+    FeDetReq = client.get_type('ns0:ArrayOfFECAEDetRequest')
+    FECAEDetRequest = client.get_type('ns0:FECAEDetRequest')
 
-    print("SI ENCONTRADA POR API")
-    print(datos_generales)
+    fe_det_req_list = []
+    for factura in facturas:
+        iva_list = []
+        for iva in factura["Iva"]:
+            AlicIva = client.get_type('ns0:AlicIva')
+            iva_list.append(AlicIva(
+                Id=iva["Id"],
+                BaseImp=iva["BaseImp"],
+                Importe=iva["Importe"]
+            ))
 
-    return datos_generales
+        fe_det_req = FECAEDetRequest(
+            Concepto=factura["Concepto"],
+            DocTipo=factura["DocTipo"],
+            DocNro=factura["DocNro"],
+            CbteDesde=factura["CbteDesde"],
+            CbteHasta=factura["CbteHasta"],
+            CbteFch=factura["CbteFch"],
+            ImpTotal=factura["ImpTotal"],
+            ImpTotConc=factura["ImpTotConc"],
+            ImpNeto=factura["ImpNeto"],
+            ImpOpEx=factura["ImpOpEx"],
+            ImpTrib=factura["ImpTrib"],
+            ImpIVA=factura["ImpIVA"],
+            FchServDesde=factura["FchServDesde"],
+            FchServHasta=factura["FchServHasta"],
+            FchVtoPago=factura["FchVtoPago"],
+            MonId=factura["MonId"],
+            MonCotiz=factura["MonCotiz"],
+            Iva={'AlicIva': iva_list} 
+        )
+        fe_det_req_list.append(fe_det_req)
 
-    # except:
-    #     print("No encontrada desde API AFIP")
-        
-    #     return "No encontrada EN API"
+    fe_det_req_array = FeDetReq(fe_det_req_list)
+
+    # Crear el objeto FeCAEReq
+    FeCAEReq = client.get_type('ns0:FECAERequest')
+    fe_cae_req = FeCAEReq(
+        FeCabReq=fe_cab_req,
+        FeDetReq=fe_det_req_array
+    )
+
+    # Llamar a la operación FECAESolicitar
+    response = client.service.FECAESolicitar(
+        Auth=auth,
+        FeCAEReq=fe_cae_req
+    )
+
+    print(response)
 
 facturador_lotes()
