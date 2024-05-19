@@ -8,7 +8,11 @@ import ssl
 from zeep.transports import Transport
 from requests import Session
 from requests.adapters import HTTPAdapter
-
+from reportlab.lib.pagesizes import A4
+from reportlab.pdfgen import canvas
+from reportlab.lib.units import cm
+from reportlab.lib import colors
+from PIL import Image
 
 class CustomHttpAdapter(HTTPAdapter):
     def init_poolmanager(self, *args, **kwargs):
@@ -206,8 +210,8 @@ def facturador_lotes():
             "Concepto": 1,
             "DocTipo": 80,
             "DocNro": 20375182906,
-            "CbteDesde": 1,
-            "CbteHasta": 1,
+            "CbteDesde": 2,
+            "CbteHasta": 2,
             "CbteFch": datetime.now().strftime("%Y%m%d"),
             "ImpTotal": 121.0,
             "ImpTotConc": 0.0,
@@ -290,7 +294,112 @@ def facturador_lotes():
         Auth=auth,
         FeCAEReq=fe_cae_req
     )
-
+    
     print(response)
 
-facturador_lotes()
+
+def generar_factura_pdf(datos_factura, logo_path, output_path):
+    c = canvas.Canvas(output_path, pagesize=A4)
+    ancho, alto = A4
+
+    # Colores y estilos
+    color_azul = colors.HexColor("#0B5394")
+    color_gris_claro = colors.HexColor("#F2F2F2")
+    c.setFillColor(color_azul)
+    c.rect(0, alto - 3 * cm, ancho, 3 * cm, fill=True, stroke=False)
+    c.setFillColor(colors.white)
+    c.setFont("Helvetica-Bold", 16)
+    c.drawString(2 * cm, alto - 1.8 * cm, "Factura")
+
+    # Agregar el logo de la empresa
+    logo = Image.open(logo_path)
+    logo_width, logo_height = logo.size
+    logo_ratio = logo_width / logo_height
+    logo_display_width = 3 * cm
+    logo_display_height = logo_display_width / logo_ratio
+    c.drawImage(logo_path, x=ancho - 4 * cm, y=alto - .5 * cm - logo_display_height, width=logo_display_width, height=logo_display_height)
+
+
+    # Datos de la empresa
+    c.setFillColor(colors.white)
+    c.setFont("Helvetica", 10)
+    c.drawString(2 * cm, alto - 3.5 * cm, "Nombre de la Empresa")
+    c.drawString(2 * cm, alto - 4 * cm, "Dirección de la Empresa")
+    c.drawString(2 * cm, alto - 4.5 * cm, "Ciudad, Estado, ZIP")
+    c.drawString(2 * cm, alto - 5 * cm, "Teléfono: +123456789")
+    c.drawString(2 * cm, alto - 5.5 * cm, "Correo: empresa@example.com")
+
+    # Datos del cliente
+    c.setFillColor(colors.black)
+    c.setFont("Helvetica-Bold", 10)
+    c.drawString(12 * cm, alto - 4 * cm, "Cliente:")
+    c.setFont("Helvetica", 10)
+    c.drawString(12 * cm, alto - 4.5 * cm, f"Nombre: {datos_factura['cliente_nombre']}")
+    c.drawString(12 * cm, alto - 5 * cm, f"Dirección: {datos_factura['cliente_direccion']}")
+    c.drawString(12 * cm, alto - 5.5 * cm, f"CUIT: {datos_factura['cliente_cuit']}")
+
+    # Datos de la factura
+    c.setFillColor(colors.black)
+    c.drawString(2 * cm, alto - 4.1 * cm, f"Fecha: {datos_factura['fecha']}")
+    c.drawString(2 * cm, alto - 4.5 * cm, f"Factura Nro: {datos_factura['factura_nro']}")
+    c.drawString(2 * cm, alto - 5.0 * cm, f"Condición de venta: {datos_factura['condicion_venta']}")
+    c.drawString(2 * cm, alto - 5.5 * cm, f"N°CAE: {datos_factura['factura_nro']}")
+
+    # Detalles de la factura
+    c.setFont("Helvetica-Bold", 10)
+    c.setFillColor(color_azul)
+    c.drawString(2 * cm, alto - 8 * cm, "Descripción")
+    c.drawString(12 * cm, alto - 8 * cm, "Cantidad")
+    c.drawString(15 * cm, alto - 8 * cm, "Precio Unitario")
+    c.drawString(18 * cm, alto - 8 * cm, "Total")
+
+    c.setFillColor(colors.black)
+    c.setFont("Helvetica", 10)
+    y = alto - 9 * cm
+    for item in datos_factura['items']:
+        c.drawString(2 * cm, y, item['descripcion'])
+        c.drawString(12 * cm, y, str(item['cantidad']))
+        c.drawString(15 * cm, y, f"${item['precio_unitario']:.2f}")
+        c.drawString(18 * cm, y, f"${item['total']:.2f}")
+        y -= 0.5 * cm
+
+    # Totales
+    y -= 0.5 * cm
+    c.setFillColor(color_gris_claro)
+    c.rect(14 * cm, y - 3 * cm, 6 * cm, 2.5 * cm, fill=True, stroke=False)
+    c.setFillColor(colors.black)
+    c.drawString(15 * cm, y - 1.2 * cm, "Subtotal:")
+    c.drawString(18 * cm, y - 1.2 * cm, f"${datos_factura['subtotal']:.2f}")
+    c.drawString(15 * cm, y - 1.7 * cm, "IVA:")
+    c.drawString(18 * cm, y - 1.7 * cm, f"${datos_factura['iva']:.2f}")
+    c.drawString(15 * cm, y - 2.2 * cm, "Total:")
+    c.setFont("Helvetica-Bold", 10)
+    c.drawString(18 * cm, y - 2.2 * cm, f"${datos_factura['total']:.2f}")
+
+    c.showPage()
+    c.save()
+
+# Datos de ejemplo
+datos_factura = {
+    "cliente_nombre": "Juan Pérez",
+    "cliente_direccion": "Calle Falsa 123",
+    "cliente_cuit": "20375182906",
+    "fecha": "2024-05-19",
+    "factura_nro": "0001-00000001",
+    "condicion_venta": "Contado",
+    "items": [
+        {"descripcion": "Producto A", "cantidad": 2, "precio_unitario": 41.32, "total": 82.64},
+        {"descripcion": "Producto B", "cantidad": 1, "precio_unitario": 17.36, "total": 17.36}
+        ,
+        {"descripcion": "Producto B", "cantidad": 1, "precio_unitario": 17.36, "total": 17.36}
+        ,
+        {"descripcion": "Producto B", "cantidad": 1, "precio_unitario": 17.36, "total": 17.36}
+    ],
+    "subtotal": 100.0,
+    "iva": 17.36,
+    "total": 117.36
+}
+
+
+# Generar la factura
+generar_factura_pdf(datos_factura, "logo.png", "factura.pdf")
