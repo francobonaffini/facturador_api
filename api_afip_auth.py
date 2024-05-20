@@ -210,8 +210,8 @@ def facturador_lotes():
             "Concepto": 1,
             "DocTipo": 80,
             "DocNro": 20375182906,
-            "CbteDesde": 2,
-            "CbteHasta": 2,
+            "CbteDesde": 3,
+            "CbteHasta": 3,
             "CbteFch": datetime.now().strftime("%Y%m%d"),
             "ImpTotal": 121.0,
             "ImpTotConc": 0.0,
@@ -402,4 +402,6 @@ datos_factura = {
 
 
 # Generar la factura
-generar_factura_pdf(datos_factura, "logo.png", "factura.pdf")
+# generar_factura_pdf(datos_factura, "logo.png", "factura.pdf")
+
+facturador_lotes()
