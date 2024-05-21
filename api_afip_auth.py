@@ -13,6 +13,9 @@ from reportlab.pdfgen import canvas
 from reportlab.lib.units import cm
 from reportlab.lib import colors
 from PIL import Image
+import json
+import base64
+import qrcode
 
 class CustomHttpAdapter(HTTPAdapter):
     def init_poolmanager(self, *args, **kwargs):
@@ -459,7 +462,7 @@ def facturador_lotes():
     
     print(response)
 
-def generar_factura_pdf(datos_factura, logo_path, output_path):
+def generar_factura_pdf(datos_factura, logo_path, output_path, afip_logo_img, disclaimer_img):
     c = canvas.Canvas(output_path, pagesize=A4)
     ancho, alto = A4
 
@@ -471,12 +474,10 @@ def generar_factura_pdf(datos_factura, logo_path, output_path):
     c.setFillColor(colors.white)
     c.setFont("Helvetica-Bold", 16)
     c.drawString(2 * cm, alto - 1.8 * cm, "Factura")
-    c.setFont("Helvetica-Bold", 26)
+    c.setFont("Helvetica-Bold", 30)
     c.drawString(10 * cm, alto - 1.8 * cm, "B")
     c.setFont("Helvetica", 9)
-    c.drawString(10 * cm, alto - 2.2 * cm, "006")
-
-
+    c.drawString(9.6 * cm, alto - 2.2 * cm, "COD. 006")
 
     # Agregar el logo de la empresa
     logo = Image.open(logo_path)
@@ -538,15 +539,69 @@ def generar_factura_pdf(datos_factura, logo_path, output_path):
     # Totales
     y -= 0.5 * cm
     c.setFillColor(color_gris_claro)
-    c.rect(14 * cm, y - 3 * cm, 6 * cm, 2.5 * cm, fill=True, stroke=False)
+    c.rect(13 * cm, y - 3 * cm, 6 * cm, 2.5 * cm, fill=True, stroke=False)
     c.setFillColor(colors.black)
-    c.drawString(15 * cm, y - 1.2 * cm, "Subtotal:")
-    c.drawString(18 * cm, y - 1.2 * cm, f"${datos_factura['subtotal']:.2f}")
-    c.drawString(15 * cm, y - 1.7 * cm, "IVA:")
-    c.drawString(18 * cm, y - 1.7 * cm, f"${datos_factura['iva']:.2f}")
-    c.drawString(15 * cm, y - 2.2 * cm, "Total:")
+    c.drawString(14 * cm, y - 1.3 * cm, "Subtotal:")
+    c.drawString(17 * cm, y - 1.2 * cm, f"${datos_factura['subtotal']:.2f}")
+    c.drawString(14 * cm, y - 1.8 * cm, "IVA:")
+    c.drawString(17 * cm, y - 1.7 * cm, f"${datos_factura['iva']:.2f}")
+    c.drawString(14 * cm, y - 2.3 * cm, "Total:")
     c.setFont("Helvetica-Bold", 10)
-    c.drawString(18 * cm, y - 2.2 * cm, f"${datos_factura['total']:.2f}")
+    c.drawString(17 * cm, y - 2.2 * cm, f"${datos_factura['total']:.2f}")
+    
+    # Comenzamos el proceso de armado de QR:
+
+    # Estos datos son los que te pide para armar el QR, desde la documentación de AFIP
+    datos_cmp = {
+        "ver": 1,
+        "fecha": "2020-10-13",
+        "cuit": 30000000007,
+        "ptoVta": 10,
+        "tipoCmp": 1,
+        "nroCmp": 94,
+        "importe": 12100,
+        "moneda": "DOL",
+        "ctz": 65,
+        "tipoDocRec": 80,
+        "nroDocRec": 20000000001,
+        "tipoCodAut": "E",
+        "codAut": 70417054367476
+    }
+
+    datos_cmp_str = json.dumps(datos_cmp)
+    datos_cmp_base64 = base64.b64encode(datos_cmp_str.encode()).decode()
+
+    url_qr = f"https://www.afip.gob.ar/fe/qr/?p={datos_cmp_base64}"
+
+    qr = qrcode.QRCode(
+        version=1,
+        error_correction=qrcode.constants.ERROR_CORRECT_L,
+        box_size=10,
+        border=4,
+    )
+
+    qr.add_data(url_qr)
+    qr.make(fit=True)
+
+    img_qr = qr.make_image(fill='black', back_color='white')
+    img_qr_path = "qr_code.png"
+    img_qr.save(img_qr_path)
+
+    # Agregar el código QR
+    qr_size = 3 * cm
+    c.drawImage(img_qr_path, x=2 * cm, y=1 * cm, width=qr_size, height=qr_size)
+
+    c.drawImage(afip_logo_img, x=5.5  * cm, y=3 * cm , width=4 *cm, height=1*cm)
+
+    c.drawImage(disclaimer_img, x=5.5 * cm, y=1.5 * cm , width=10 *cm, height=1*cm )
+
+    c.drawString(15 * cm, 3.5 * cm, "CAE N°:")
+    c.setFont("Helvetica", 10)
+    c.drawString(16.5 * cm, 3.5 * cm, "73365326440110")
+    c.setFont("Helvetica-Bold", 10)
+    c.drawString(12.6 * cm, 2.8 * cm, "Fecha de Vto. de CAE:")
+    c.setFont("Helvetica", 10)
+    c.drawString(16.5 * cm, 2.8 * cm, "20/05/2024")
 
     c.showPage()
     c.save()
@@ -579,7 +634,7 @@ datos_factura = {
 
 # Ejecucion de funciones: >
 
-# generar_factura_pdf(datos_factura, "logo.png", "factura.pdf")
+generar_factura_pdf(datos_factura, "logo.png", "factura.pdf", "afip.png", "disclaimer.png")
 
 # facturador_lotes()
 
