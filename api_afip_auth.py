@@ -477,7 +477,7 @@ def generar_factura_pdf(datos_factura, logo_path, output_path, afip_logo_img, di
     c.setFont("Helvetica-Bold", 30)
     c.drawString(10 * cm, alto - 1.8 * cm, "A")
     c.setFont("Helvetica", 9)
-    c.drawString(9.6 * cm, alto - 2.2 * cm, "COD. 006")
+    c.drawString(9.6 * cm, alto - 2.2 * cm, "COD. 001")
 
     # Agregar el logo de la empresa
     logo = Image.open(logo_path)
@@ -503,24 +503,45 @@ def generar_factura_pdf(datos_factura, logo_path, output_path, afip_logo_img, di
 
     # Datos de la factura
     c.setFillColor(colors.black)
+    c.setFont("Helvetica-Bold", 10)
     c.drawString(2 * cm, alto - 4 * cm,"Punto de venta:")
-    c.drawString(4.6 * cm, alto - 4 * cm,"00001")
+    c.setFont("Helvetica", 10)
+    c.drawString(4.7 * cm, alto - 4 * cm,"00001")
+    c.setFont("Helvetica-Bold", 10)
     c.drawString(6 * cm, alto - 4 * cm,"Comp. Nro:")
+    c.setFont("Helvetica", 10)
     c.drawString(8 * cm, alto - 4 * cm,"00000008")
+    c.setFont("Helvetica-Bold", 10)
     c.drawString(2 * cm, alto - 4.6 * cm, "Fecha de Emisión: ")
-    c.drawString(5.1 * cm, alto - 4.6 * cm, "31/07/2024")
-    c.drawString(2 * cm, alto - 5.2 * cm, "CUIT: ")
-    c.drawString(3.1 * cm, alto - 5.2 * cm, "20375182905")
+    c.setFont("Helvetica", 10)
+    c.drawString(5.2 * cm, alto - 4.6 * cm, "31/07/2024")
+    c.setFont("Helvetica-Bold", 10)
+    c.drawString(2 * cm, alto - 5.6 * cm, "CUIT: ")
+    c.setFont("Helvetica", 10)
+    c.drawString(3.1 * cm, alto - 5.6 * cm, "20375182905")
+    c.setFont("Helvetica-Bold", 10)
+    c.drawString(2 * cm, alto - 6.1 * cm, "Ingresos Brutos: ")
+    c.setFont("Helvetica", 10)
+    c.drawString(5.1 * cm, alto - 6.1 * cm, "933137")
+    c.setFont("Helvetica-Bold", 10)
+    c.drawString(2 * cm, alto - 6.6 * cm, "Fecha de Inicio de Actividades: ")
+    c.setFont("Helvetica", 10)
+    c.drawString(7.4 * cm, alto - 6.6 * cm, "01/12/2022")
 
     # Datos del cliente
     c.setFillColor(colors.black)
     c.setFont("Helvetica-Bold", 10)
-    c.drawString(12 * cm, alto - 4 * cm, "Cliente:")
+    c.drawString(12 * cm, alto - 4 * cm, "Razón Social")
     c.setFont("Helvetica", 10)
-    c.drawString(12 * cm, alto - 4.5 * cm, f"Nombre: {datos_factura['cliente_nombre']}")
-    c.drawString(12 * cm, alto - 5 * cm, f"Dirección: {datos_factura['cliente_direccion']}")
-    c.drawString(12 * cm, alto - 5.5 * cm, f"CUIT: {datos_factura['cliente_cuit']}")
-
+    c.drawString(12 * cm, alto - 4.5 * cm, "BONAFFINI FRANCO")
+    c.setFont("Helvetica-Bold", 10)
+    c.drawString(12 * cm, alto - 5 * cm, "Dirección Comercial")
+    c.setFont("Helvetica", 10)
+    c.drawString(12 * cm, alto - 5.5 * cm, "Los Olivos, Casa 13 13 - Las Heras,Mendoza")
+    c.setFont("Helvetica-Bold", 10)
+    c.drawString(12 * cm, alto - 6 * cm, "Condicion frente al IVA")
+    c.setFont("Helvetica", 10)
+    c.drawString(12 * cm, alto - 6.5 * cm, "Responsable Monotributo")
 
     # Detalles de la factura
     c.setFillColor(colors.HexColor("#F2F2F2"))
@@ -528,7 +549,7 @@ def generar_factura_pdf(datos_factura, logo_path, output_path, afip_logo_img, di
     c.setFont("Helvetica-Bold", 10)
     c.setFillColor(color_azul)
     c.drawString(2 * cm, alto - 8 * cm, "Descripción")
-    c.drawString(12 * cm, alto - 8 * cm, "Cantidad")
+    c.drawString(8 * cm, alto - 8 * cm, "Cantidad")
     c.drawString(15 * cm, alto - 8 * cm, "Precio Unitario")
     c.drawString(18 * cm, alto - 8 * cm, "Total")
 
@@ -536,7 +557,7 @@ def generar_factura_pdf(datos_factura, logo_path, output_path, afip_logo_img, di
     y = alto - 9 * cm
     for item in datos_factura['items']:
         c.drawString(2 * cm, y, item['descripcion'])
-        c.drawString(12 * cm, y, str(item['cantidad']))
+        c.drawString(8 * cm, y, str(item['cantidad']))
         c.drawString(15 * cm, y, f"${item['precio_unitario']:.2f}")
         c.drawString(18 * cm, y, f"${item['total']:.2f}")
         y -= 0.5 * cm
@@ -625,15 +646,18 @@ datos_factura = {
         ,
         {"descripcion": "Producto B", "cantidad": 1, "precio_unitario": 17.36, "total": 17.36}
         ,
+        {"descripcion": "Producto B", "cantidad": 1, "precio_unitario": 17.36, "total": 17.36},
+        {"descripcion": "Producto B", "cantidad": 1, "precio_unitario": 17.36, "total": 17.36},
+        {"descripcion": "Producto B", "cantidad": 1, "precio_unitario": 17.36, "total": 17.36},
+        {"descripcion": "Producto B", "cantidad": 1, "precio_unitario": 17.36, "total": 17.36},
+        {"descripcion": "Producto B", "cantidad": 1, "precio_unitario": 17.36, "total": 17.36},
+        {"descripcion": "Producto B", "cantidad": 1, "precio_unitario": 17.36, "total": 17.36},
         {"descripcion": "Producto B", "cantidad": 1, "precio_unitario": 17.36, "total": 17.36}
     ],
     "subtotal": 100.0,
     "iva": 17.36,
     "total": 117.36
 }
-
-
-
 
 # Generar la factura
 
