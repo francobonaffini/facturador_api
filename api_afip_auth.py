@@ -475,7 +475,7 @@ def generar_factura_pdf(datos_factura, logo_path, output_path, afip_logo_img, di
     c.setFont("Helvetica-Bold", 16)
     c.drawString(2 * cm, alto - 1.8 * cm, "Factura")
     c.setFont("Helvetica-Bold", 30)
-    c.drawString(10 * cm, alto - 1.8 * cm, "B")
+    c.drawString(10 * cm, alto - 1.8 * cm, "A")
     c.setFont("Helvetica", 9)
     c.drawString(9.6 * cm, alto - 2.2 * cm, "COD. 006")
 
@@ -501,6 +501,17 @@ def generar_factura_pdf(datos_factura, logo_path, output_path, afip_logo_img, di
     c.drawString(2 * cm, alto - 5 * cm, "Teléfono: +123456789")
     c.drawString(2 * cm, alto - 5.5 * cm, "Correo: empresa@example.com")
 
+    # Datos de la factura
+    c.setFillColor(colors.black)
+    c.drawString(2 * cm, alto - 4 * cm,"Punto de venta:")
+    c.drawString(4.6 * cm, alto - 4 * cm,"00001")
+    c.drawString(6 * cm, alto - 4 * cm,"Comp. Nro:")
+    c.drawString(8 * cm, alto - 4 * cm,"00000008")
+    c.drawString(2 * cm, alto - 4.6 * cm, "Fecha de Emisión: ")
+    c.drawString(5.1 * cm, alto - 4.6 * cm, "31/07/2024")
+    c.drawString(2 * cm, alto - 5.2 * cm, "CUIT: ")
+    c.drawString(3.1 * cm, alto - 5.2 * cm, "20375182905")
+
     # Datos del cliente
     c.setFillColor(colors.black)
     c.setFont("Helvetica-Bold", 10)
@@ -510,12 +521,6 @@ def generar_factura_pdf(datos_factura, logo_path, output_path, afip_logo_img, di
     c.drawString(12 * cm, alto - 5 * cm, f"Dirección: {datos_factura['cliente_direccion']}")
     c.drawString(12 * cm, alto - 5.5 * cm, f"CUIT: {datos_factura['cliente_cuit']}")
 
-    # Datos de la factura
-    c.setFillColor(colors.black)
-    c.drawString(2 * cm, alto - 4.1 * cm, f"Fecha: {datos_factura['fecha']}")
-    c.drawString(2 * cm, alto - 4.5 * cm, f"Factura Nro: {datos_factura['factura_nro']}")
-    c.drawString(2 * cm, alto - 5.0 * cm, f"Condición de venta: {datos_factura['condicion_venta']}")
-    c.drawString(2 * cm, alto - 5.5 * cm, f"N°CAE: {datos_factura['factura_nro']}")
 
     # Detalles de la factura
     c.setFillColor(colors.HexColor("#F2F2F2"))
