@@ -463,17 +463,37 @@ def facturador_lotes():
     print(response)
 
 def generar_factura_pdf(datos_factura, logo_path, output_path, afip_logo_img, disclaimer_img):
+    
+    def dividir_texto(texto, max_ancho, c, font_name="Helvetica", font_size=8):
+        
+        """
+        Divide el texto en múltiples líneas para que se ajuste dentro de un ancho máximo.
+        """
+        c.setFont(font_name, font_size)
+        palabras = texto.split(' ')
+        lineas = []
+        linea_actual = ""
+        for palabra in palabras:
+            if c.stringWidth(linea_actual + palabra) < max_ancho:
+                linea_actual += palabra + " "
+            else:
+                lineas.append(linea_actual)
+                linea_actual = palabra + " "
+        lineas.append(linea_actual)
+        return lineas
+    
     c = canvas.Canvas(output_path, pagesize=A4)
     ancho, alto = A4
 
     # Colores y estilos
     color_azul = colors.HexColor("#0B5394")
+    color_azul2 = colors.HexColor("#B6C8FF")
     color_gris_claro = colors.HexColor("#F2F2F2")
     c.setFillColor(color_azul)
     c.rect(0, alto - 3 * cm, ancho, 3 * cm, fill=True, stroke=False)
     c.setFillColor(colors.white)
     c.setFont("Helvetica-Bold", 16)
-    c.drawString(2 * cm, alto - 1.8 * cm, "Factura")
+    c.drawString(1.3 * cm, alto - 1.6 * cm, "Factura")
     c.setFont("Helvetica-Bold", 30)
     c.drawString(10 * cm, alto - 1.8 * cm, "A")
     c.setFont("Helvetica", 9)
@@ -485,12 +505,7 @@ def generar_factura_pdf(datos_factura, logo_path, output_path, afip_logo_img, di
     logo_ratio = logo_width / logo_height
     logo_display_width = 3 * cm
     logo_display_height = logo_display_width / logo_ratio
-    c.drawImage(logo_path, x=ancho - 5 * cm, y=alto - .5 * cm - logo_display_height, width=logo_display_width, height=logo_display_height)
-
-    # Agregar una línea recta horizontal
-    c.setStrokeColor(color_azul)
-    c.setLineWidth(1)  # Ancho de la línea
-    c.line(2 * cm, alto - 7 * cm, ancho - 2 * cm, alto - 7 * cm)
+    c.drawImage(logo_path, x=ancho - 4.5 * cm, y=alto - 0.9 * cm - logo_display_height, width=logo_display_width, height=logo_display_height)
 
     # Datos de la empresa
     c.setFillColor(colors.white)
@@ -543,37 +558,106 @@ def generar_factura_pdf(datos_factura, logo_path, output_path, afip_logo_img, di
     c.setFont("Helvetica", 10)
     c.drawString(12 * cm, alto - 6.5 * cm, "Responsable Monotributo")
 
+
+
+    #Periodos
+    c.setFillColor(colors.black)
+    c.setFont("Helvetica-Bold", 10)
+    c.drawString(2 * cm, alto - 7.5 * cm,"Período Facturado Desde:")
+    c.setFont("Helvetica", 10)
+    c.drawString(6.4 * cm, alto - 7.5 * cm,"01/09/2023")
+    c.setFont("Helvetica-Bold", 10)
+    c.drawString(9 * cm, alto - 7.5 * cm,"Hasta:")
+    c.setFont("Helvetica", 10)
+    c.drawString(10.1 * cm, alto - 7.5 * cm,"30/09/2023")
+    c.setFont("Helvetica-Bold", 10)
+    c.drawString(12.6 * cm, alto - 7.5 * cm,"Fecha de Vto. para el pago:")
+    c.setFont("Helvetica", 10)
+    c.drawString(17.2 * cm, alto - 7.5 * cm,"06/09/2023")
+
+    # Rectángulo azul sin relleno
+    c.setStrokeColor(color_azul2)
+    c.setLineWidth(0.5)  # Opcional, para definir el grosor de la línea
+    x = 2 * cm
+    y = alto - 10.1 * cm
+    width = 17* cm
+    height = 2.3 * cm
+    c.rect(x, y, width, height, fill=False)
+
+    c.setFillColor(colors.black)
+    c.setFont("Helvetica", 7)
+    c.drawString(2.1 * cm, alto - 8.1 * cm,"Cliente:")
+
+    c.setFont("Helvetica-Bold", 8)
+    c.drawString(2.6 * cm, alto - 8.5 * cm,"CUIT:")
+    c.setFont("Helvetica", 8)
+    c.drawString(3.5 * cm, alto - 8.5 * cm,"30659511106")
+    c.setFont("Helvetica-Bold", 8)
+    c.drawString(2.6 * cm, alto - 9 * cm,"Condición de venta:")
+    c.setFont("Helvetica", 8)
+    c.drawString(5.4 * cm, alto - 9 * cm,"Otra")
+    
+    c.setFont("Helvetica-Bold", 8)
+    c.drawString(9 * cm, alto - 8.5 * cm,"Titular:")
+    c.setFont("Helvetica", 8)
+    c.drawString(10.1 * cm, alto - 8.5 * cm,"JUNCAL S R L")
+    c.setFont("Helvetica-Bold", 8)
+    c.drawString(9 * cm, alto - 9 * cm,"Condición frente al IVA:")
+    c.setFont("Helvetica", 8)
+    c.drawString(12.3 * cm, alto - 9 * cm,"IVA Responsable Inscripto")
+    c.setFont("Helvetica-Bold", 8)
+    c.drawString(9 * cm, alto - 9.5 * cm,"Domicilio:")
+    c.setFont("Helvetica", 8)
+    c.drawString(10.4 * cm, alto - 9.5 * cm,"Chile 1585 - Mendoza Ciudad, Mendoza")
+
     # Detalles de la factura
     c.setFillColor(colors.HexColor("#F2F2F2"))
-    c.rect(0, alto - 8.2 * cm, ancho, 0.7 * cm, fill=True, stroke=False)
+    c.rect(0, alto - 11* cm, ancho, 0.7 * cm, fill=True, stroke=False)
     c.setFont("Helvetica-Bold", 10)
     c.setFillColor(color_azul)
-    c.drawString(2 * cm, alto - 8 * cm, "Descripción")
-    c.drawString(8 * cm, alto - 8 * cm, "Cantidad")
-    c.drawString(15 * cm, alto - 8 * cm, "Precio Unitario")
-    c.drawString(18 * cm, alto - 8 * cm, "Total")
+    c.drawString(2 * cm, alto - 10.8 * cm, "Descripción")
+    c.drawString(11.5 * cm, alto - 10.8 * cm, "cantidad")
+    c.drawString(14 * cm, alto - 10.8 * cm, "Precio Un.")
+    c.drawString(17.2 * cm, alto - 10.8 * cm, "Total")
 
-    c.setFont("Helvetica", 10)
-    y = alto - 9 * cm
+    c.setFont("Helvetica", 8)
+    y = alto - 11.5 * cm
     for item in datos_factura['items']:
-        c.drawString(2 * cm, y, item['descripcion'])
-        c.drawString(8 * cm, y, str(item['cantidad']))
-        c.drawString(15 * cm, y, f"${item['precio_unitario']:.2f}")
-        c.drawString(18 * cm, y, f"${item['total']:.2f}")
-        y -= 0.5 * cm
+        lineas_descripcion = dividir_texto(item['descripcion'], 9 * cm, c)
+        for linea in lineas_descripcion:
+            c.drawString(2 * cm, y, linea)
+            y -= 0.4 * cm  # Ajuste de espacio entre líneas
+        
+        c.drawString(12.1 * cm, y + 0.4 * cm, str(item['cantidad']))
+        c.drawString(14.1 * cm, y + 0.4 * cm, f"${item['precio_unitario']:.2f}")
+        c.drawString(17.3 * cm, y + 0.4 * cm, f"${item['total']:.2f}")
+        y -= 0.4 * cm  # Ajuste de espacio entre ítems
 
     # Totales
     y -= 0.5 * cm
     c.setFillColor(color_gris_claro)
-    c.rect(13 * cm, y - 3 * cm, 6 * cm, 2.5 * cm, fill=True, stroke=False)
+    c.rect(10.5 * cm, y - 2.5 * cm, 8.6 * cm, 3 * cm, fill=True, stroke=False)
     c.setFillColor(colors.black)
-    c.drawString(14 * cm, y - 1.3 * cm, "Subtotal:")
-    c.drawString(17 * cm, y - 1.2 * cm, f"${datos_factura['subtotal']:.2f}")
-    c.drawString(14 * cm, y - 1.8 * cm, "IVA:")
-    c.drawString(17 * cm, y - 1.7 * cm, f"${datos_factura['iva']:.2f}")
-    c.drawString(14 * cm, y - 2.3 * cm, "Total:")
+
+    c.setFont("Helvetica", 11)
+    c.drawString(12 * cm, y - 0.2* cm, "Subtotal:")
+    c.setFont("Helvetica", 11)
+    c.drawString(16 * cm, y - 0.2* cm, f"${datos_factura['subtotal']:.2f}")
+
+    c.setFont("Helvetica", 11)
+    c.drawString(12 * cm, y - 0.8 * cm, "IVA:")
+    c.setFont("Helvetica", 11)
+    c.drawString(16 * cm, y - 0.8 * cm, f"${datos_factura['iva']:.2f}")
+
+    c.setFont("Helvetica", 11)
+    c.drawString(12 * cm, y - 1.4 * cm, "Otros Impuestos:")
+    c.setFont("Helvetica", 11)
+    c.drawString(16 * cm, y - 1.4 * cm, f"${datos_factura['iva']:.2f}")
+
     c.setFont("Helvetica-Bold", 10)
-    c.drawString(17 * cm, y - 2.2 * cm, f"${datos_factura['total']:.2f}")
+    c.drawString(12 * cm, y - 2 * cm, "Total:")
+    c.setFont("Helvetica-Bold", 11)
+    c.drawString(16 * cm, y - 2 * cm, f"${datos_factura['total']:.2f}")
     
     # Comenzamos el proceso de armado de QR:
 
@@ -641,29 +725,27 @@ datos_factura = {
     "factura_nro": "0001-00000001",
     "condicion_venta": "Contado",
     "items": [
-        {"descripcion": "Producto A", "cantidad": 2, "precio_unitario": 41.32, "total": 82.64},
-        {"descripcion": "Producto B", "cantidad": 1, "precio_unitario": 17.36, "total": 17.36}
-        ,
-        {"descripcion": "Producto B", "cantidad": 1, "precio_unitario": 17.36, "total": 17.36}
-        ,
-        {"descripcion": "Producto B", "cantidad": 1, "precio_unitario": 17.36, "total": 17.36},
-        {"descripcion": "Producto B", "cantidad": 1, "precio_unitario": 17.36, "total": 17.36},
-        {"descripcion": "Producto B", "cantidad": 1, "precio_unitario": 17.36, "total": 17.36},
-        {"descripcion": "Producto B", "cantidad": 1, "precio_unitario": 17.36, "total": 17.36},
-        {"descripcion": "Producto B", "cantidad": 1, "precio_unitario": 17.36, "total": 17.36},
-        {"descripcion": "Producto B", "cantidad": 1, "precio_unitario": 17.36, "total": 17.36},
-        {"descripcion": "Producto B", "cantidad": 1, "precio_unitario": 17.36, "total": 17.36}
+        {"descripcion": "Esdta es la descriçion de un producto que tiene una caracteristica diferente", "cantidad": 2, "precio_unitario": 41.32, "total": 82.64},
+        {"descripcion": "Esdta es la descriçion de un producto que tiene una caracteristica diferente", "cantidad": 2, "precio_unitario": 41.32, "total": 82.64},
+        {"descripcion": "Esdta es la descriçion de un producto que tiene una caracteristica diferente", "cantidad": 2, "precio_unitario": 41.32, "total": 82.64},
+        {"descripcion": "Esdta es la descriçion de un producto que tiene una caracteristica diferente", "cantidad": 2, "precio_unitario": 41.32, "total": 82.64},
+        {"descripcion": "Esdta es la descriçion de un producto que tiene una caracteristica diferente", "cantidad": 2, "precio_unitario": 41.32, "total": 82.64},
+        {"descripcion": "Esdta es la descriçion de un producto que tiene una caracteristica diferente", "cantidad": 2, "precio_unitario": 41.32, "total": 82.64},
+        {"descripcion": "Esdta es la descriçion de un producto que tiene una caracteristica diferente", "cantidad": 2, "precio_unitario": 41.32, "total": 82.64},
+        {"descripcion": "Esdta es la descriçion de un producto que tiene una caracteristica diferente", "cantidad": 2, "precio_unitario": 41.32, "total": 82.64},
+        {"descripcion": "Esdta es la descriçion de un producto que tiene una caracteristica diferente", "cantidad": 2, "precio_unitario": 41.32, "total": 82.64},
+
     ],
-    "subtotal": 100.0,
-    "iva": 17.36,
-    "total": 117.36
+    "subtotal": 500.0,
+    "iva": 105.00,
+    "total": 605.0
 }
 
 # Generar la factura
 
 # Ejecucion de funciones: >
 
-generar_factura_pdf(datos_factura, "logo.png", "factura.pdf", "afip.png", "disclaimer.png")
+generar_factura_pdf(datos_factura, "logo3.png", "factura.pdf", "afip.png", "disclaimer.png")
 
 # facturador_lotes()
 
